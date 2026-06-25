@@ -1,42 +1,40 @@
-# Mock CBS Account Automation
+# 🎯 Mock CBS Account Automation
 
-A Cypress-based automation project for creating user accounts in the mock CBS web application.
+A polished Cypress automation suite for creating user accounts in the mock CBS web application.
 
-## Features
+---
 
-- End-to-end test coverage for account creation flows
-- Uses Cypress for browser automation
-- Supports headless execution and interactive test running
-- Includes `cypress-xpath` for XPath-based selectors
+## ✨ What this project does
 
-## Prerequisites
+- Automates account creation flows in the mock CBS UI
+- Uses Cypress for reliable browser automation
+- Supports both interactive and headless execution
+- Leverages `cypress-xpath` for XPath-driven selectors
 
-- Node.js 16+ installed
-- npm available in your environment
-- Mock CBS web app running locally or accessible via configured base URL
-
-## Installation
+## 🚀 Quick start
 
 ```bash
 cd "Create User Automation"
 npm install
 ```
 
-## Available scripts
+## ⚙️ Available commands
 
-- `npm run cypress:open` — open Cypress Test Runner
-- `npm run cypress:run` — execute tests in headless mode
-- `npm run cypress:open:prompt` — custom script wrapper for Cypress via `scripts/run-cypress.js`
+| Command | Description |
+| --- | --- |
+| `npm run cypress:open` | Launch Cypress Test Runner |
+| `npm run cypress:run` | Run tests headless |
+| `npm run cypress:open:prompt` | Run custom Cypress prompt script |
 
-## Running tests
+## 🧪 Run tests
 
-### Open Cypress interactively
+### Interactive mode
 
 ```bash
 npm run cypress:open
 ```
 
-### Run tests in headless mode
+### Headless mode
 
 ```bash
 npm run cypress:run
@@ -48,32 +46,43 @@ npm run cypress:run
 npm run cypress:open:prompt
 ```
 
-## Configuration
+## 🔧 Configuration
 
-The project uses `cypress.config.js` for Cypress settings. By default, tests expect the application to be available at `http://localhost:3000`.
+The active Cypress settings are stored in `cypress.config.js`.
 
-If your target app runs on a different URL, update the `baseUrl` value in `cypress.config.js`.
+- Default `baseUrl`: `http://localhost:3000`
+- If your app runs elsewhere, update `baseUrl` accordingly.
 
-## Notes
+## 📁 Project structure
 
-- The tests rely on XPath selectors via the `cypress-xpath` plugin.
-- If the page structure or timing changes, update selectors and wait logic in `cypress/e2e/*.cy.js`.
-- Ensure any required test fixtures are present in `cypress/fixtures`.
+- `cypress/e2e/` — test specs
+- `cypress/fixtures/` — test data and mocks
+- `cypress/support/` — custom commands and support utilities
+- `scripts/run-cypress.js` — custom launcher for Cypress
 
-## Project structure
+## 📝 Notes
 
-- `cypress/e2e/` — Cypress test specs
-- `cypress/fixtures/` — static test data
-- `cypress/support/` — custom Cypress commands and support files
-- `scripts/run-cypress.js` — custom Cypress runner script
+- Tests use XPath selectors via `cypress-xpath`
+- If page structure or timing changes, update selectors and waits in `cypress/e2e/*.cy.js`
+- Keep fixture data current in `cypress/fixtures`
 
-## Dependencies
+## 📦 Dependencies
 
 - `cypress` — browser automation framework
-- `cypress-xpath` — XPath support for Cypress
+- `cypress-xpath` — XPath selector support
 
-## Tips
+## 💡 Tips
 
-- Use `npx cypress open --env groupsCount=5,groups619=2` to supply environment variables for test runs.
-- Keep selectors stable by preferring data attributes when possible.
-- Review the Cypress Test Runner output for any failing assertions or timeout issues.
+- Use environment variables to control run parameters:
+  - `npx cypress open --env groupsCount=5,groups619=2`
+- Prefer stable selectors such as `data-*` attributes when updating tests
+- Check Cypress logs for timeouts or selector failures
+
+---
+
+## 🛠️ Recommended workflow
+
+1. Install dependencies
+2. Start your mock CBS app
+3. Run `npm run cypress:open` to debug interactively
+4. Use `npm run cypress:run` for CI-friendly test execution
