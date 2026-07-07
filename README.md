@@ -59,12 +59,18 @@ The active Cypress settings are stored in `cypress.config.js`.
 - `cypress/fixtures/` — test data and mocks
 - `cypress/support/` — custom commands and support utilities
 - `scripts/run-cypress.js` — custom launcher for Cypress
+- `scripts/generate_company_names.js` — regenerate the company name dataset
 
 ## 📝 Notes
 
 - Tests use XPath selectors via `cypress-xpath`
 - If page structure or timing changes, update selectors and waits in `cypress/e2e/*.cy.js`
 - Keep fixture data current in `cypress/fixtures`
+- Regenerate the company name fixture with:
+
+  ```bash
+  node scripts/generate_company_names.js > cypress/fixtures/company_names_5000.txt
+  ```
 
 ## 📦 Dependencies
 
