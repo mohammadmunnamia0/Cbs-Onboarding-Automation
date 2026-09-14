@@ -43,7 +43,7 @@ npm run cypress:run
 ### Custom prompt mode
 
 ```bash
-npm run cypress:open:prompt
+npm run cypress:open:promptoxs-
 ```
 
 ## 🔧 Configuration

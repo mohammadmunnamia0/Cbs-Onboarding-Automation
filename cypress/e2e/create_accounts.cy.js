@@ -74,7 +74,7 @@ const companyPrefixes = [
   'Unity', 'Trust', 'Progress', 'Success', 'Prosper', 'Harmony', 'Reliable',
 
   // Additional useful prefixes
-  'Bangla', 'Bengal', 'Desh', 'Probash', 'Sundar', 'Shakti', 'Pragati',
+  'Bangla', 'Desh', 'Probash', 'Sundar', 'Shakti', 'Pragati',
   'Somoy', 'Dhaka', 'Chiro', 'Priyo', 'Shonar', 'Teesta', 'Samriddhi',
   'Bandhu', 'Mukti', 'Sundarban', 'Purbasha', 'Nabab', 'Joy', 'Neel',
   'Noya', 'Protic', 'Swapno', 'Noor', 'Tara', 'Majhi', 'Nodi', 'Srishti',
