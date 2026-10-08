@@ -1,0 +1,40 @@
+[
+  {
+    "runId": "2026-10-08T11:07:12.970Z",
+    "createdAt": "2026-10-08T11:07:33.152Z",
+    "loanLimit": "619",
+    "customerId": "56469189",
+    "customerName": "GODHULI STEEL LTD.",
+    "cdAccount": "07623068785",
+    "odAccount": "37545277883",
+    "asgAccount": "25833113990",
+    "limits": {}
+  },
+  {
+    "runId": "2026-10-08T11:24:40.870Z",
+    "createdAt": "2026-10-08T11:25:05.769Z",
+    "loanLimit": "619",
+    "customerId": "16211942",
+    "customerName": "SANCHITA DYEING LTD.",
+    "cdAccount": "29423548694",
+    "odAccount": "82686915991",
+    "asgAccount": "68203912212",
+    "limits": {}
+  },
+  {
+    "runId": "2026-10-08T11:35:42.112Z",
+    "createdAt": "2026-10-08T11:36:05.205Z",
+    "loanLimit": "619",
+    "customerId": "73761271",
+    "customerName": "OIKKO CEMENT PLC",
+    "cdAccount": "00790970417",
+    "odAccount": "02148505628",
+    "asgAccount": "78241686283",
+    "limits": {
+      "FF": {
+        "status": "approved",
+        "updatedAt": "2026-10-08T11:41:21.884Z"
+      }
+    }
+  }
+]

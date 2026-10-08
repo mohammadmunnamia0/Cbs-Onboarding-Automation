@@ -138,7 +138,7 @@ It asks:
 
 1. **Maker** (`cad_duo`) logs in → Factoring Finance → Limit → Create Limit
    - **Customer Information:** Loan Account → Tick Mark (customer details load from CBS) → Contact Number, Assignment Account, Business Nature and rates
-   - **Anchor Information:** for each buyer, click **New Anchor**, type letters into **Anchor Name** and take the first suggestion not used yet. Anchors with no Remaining Notional Limit are skipped. No anchor names are fixed.
+   - **Anchor Information:** for each buyer, click **New Anchor**, type letters into **Anchor Name** and take the first suggestion not used yet. Anchors with no Remaining Notional Limit, and anchors in `excludedAnchors` (in `limitData`), are skipped. No anchor names are fixed.
    - Submit
 2. **Authorizer** (`cad03_auth`) logs in → Factoring Finance → Limit → searches the customer name → ticks **only that row** → Approve
 
@@ -195,6 +195,7 @@ The prompts pick it up automatically.
 - `baseUrl`: `https://staging.optifin.sscl.tech/cbs-service/accounts` (mock CBS, used by account creation)
 - The Limit spec logs in at `https://staging.optifin.sscl.tech/login` (`loginUrl` in `limitData`)
 - Tasks `saveCreatedAccount` and `markLimit` write to `cypress/fixtures/created_accounts.json`
+- Videos and failure screenshots are turned off (`video`, `screenshotOnRunFailure`). Set them to `true` when you need them for debugging.
 
 Environment values for account creation:
 
@@ -232,7 +233,7 @@ The older `groupsCount=5,groups619=2` (last N groups are 619) still works.
 | `CUSTOMER ALREADY ONBOARDED` | That loan account already has a limit. Pick another account. |
 | `No anchor with remaining notional limit was found` | No anchor in the Anchor Name search has limit left. Check the anchors in the app. |
 | Cypress prints `bad option: --no-sandbox` | The terminal has `ELECTRON_RUN_AS_NODE` set (VS Code can do this). The prompts remove it; for plain `npx cypress` commands run `unset ELECTRON_RUN_AS_NODE` first. |
-| Old screenshots / videos disappeared | Cypress clears `cypress/screenshots` and `cypress/videos` before every `cypress run`. |
+| `... a popup is still open: "..."` | The app kept a popup open (for example, it refused an anchor). The quoted text is the popup's message. If an anchor causes it, add the anchor to `excludedAnchors`. |
 | A button or field is not found | The page changed. Update the XPath in the `selectors` object at the top of the spec. |
 
 ## 🛠️ Recommended workflow

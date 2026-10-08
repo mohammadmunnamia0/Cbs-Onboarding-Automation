@@ -25,7 +25,7 @@ const limitData = {
 
   makerUserID: env('makerUserID', 'cad_duo'),
   makerPassword: env('makerPassword', 'Prime123@'),
-  authUserID: env('authUserID', 'cad03_auth'),
+  authUserID: env('authUserID', 'cad_auth'),
   authPassword: env('authPassword', 'Prime123@'),
 
   // Customer Information
@@ -46,7 +46,20 @@ const limitData = {
   // `buyerCount` is a number or 'all'. `limit` is lowered to the anchor's
   // remaining notional limit when that is smaller.
   buyerCount: env('buyerCount', '2'),
-  buyer: { limit: '1000000', creditPeriod: '5', financingRate: '70' }
+  buyer: { limit: '1000000', creditPeriod: '5', financingRate: '70' },
+
+  // Anchors never to pick, matched by name or ID in the Anchor Name suggestion
+  excludedAnchors: [
+    { id: '00263289', name: 'EXPRESS LOGISTICS' },
+    { id: '1062661', name: 'M/S DHAKA AUTO RICE MILL' },
+    { id: '1812335', name: 'M/S SHIFA ENTERPRISE' },
+    { id: '1019874', name: 'BAJAJ WORLD' }
+  ]
+}
+
+function isExcludedAnchor(text){
+  const t = text.toUpperCase()
+  return limitData.excludedAnchors.some(a => t.includes(a.name.toUpperCase()) || t.includes(a.id))
 }
 
 // Same rules the app enforces, checked up front so a bad edit fails fast
@@ -82,7 +95,6 @@ const selectors = {
   password: "//input[@id='password']",
   loginButton: "//button[@data-testid='login-button']",
   okButton: "//button[normalize-space()='OK']",
-  accountOption: "//div[contains(@class,'rounded-full flex justify-center items-center border w-7 h-7 md:w-10 md:h-10 text-primary transition-all duration-300 ease-in-out cursor-pointer bg-white hover:bg-primary/10 border-gray hover:border-primary/50 hover:shadow-md')]//*[name()='svg']",
   logoutButton: "//button[@data-testid='logout-btn']",
 
   // Limit menu
@@ -132,6 +144,18 @@ describe('Factoring Finance - Create Limit', { defaultCommandTimeout: 60000, vie
     cy.xpath(xpath).scrollIntoView().should('be.visible').clear().type(value)
   }
 
+  // A dark full-screen overlay sits behind every popup. Waits for it to go,
+  // and if it stays, fails with the popup's text (usually the app's reason).
+  const waitForPopupToClose = context => {
+    cy.get('body', { timeout: 15000 }).should($body => {
+      const overlay = $body.find('div.fixed.inset-0.bg-black').filter(':visible')
+      if (overlay.length) {
+        const text = overlay.first().text().replace(/\s+/g, ' ').trim().slice(0, 400)
+        throw new Error(`${context}: a popup is still open: "${text}"`)
+      }
+    })
+  }
+
   const clickOk = () => {
     cy.xpath(selectors.okButton).should('be.visible').click()
   }
@@ -150,11 +174,29 @@ describe('Factoring Finance - Create Limit', { defaultCommandTimeout: 60000, vie
     })
   }
 
+  // The user menu is the box at the top right showing the user's name and role
+  // (e.g. "Md. Mijan Solo / CAD Authorizer"). Finds it by that role text in the
+  // header area, so the Pending column ("Pending At (CAD Authorizer...)") is not hit.
+  const openUserMenu = () => {
+    cy.get('body').then($body => {
+      const win = $body[0].ownerDocument.defaultView
+      const inHeaderRight = el => {
+        const r = el.getBoundingClientRect()
+        return r.width > 0 && r.top < 120 && r.left > win.innerWidth / 2
+      }
+      const roleText = [...$body.find('*')].filter(el =>
+        el.children.length === 0 && /CAD\s/.test(el.textContent) && inHeaderRight(el)
+      )
+      if (!roleText.length) throw new Error('Cannot find the user menu (top right box with the CAD role) to log out')
+      cy.wrap(roleText[roleText.length - 1]).click()
+    })
+  }
+
   const logout = () => {
     cy.wait(2000)
-    cy.xpath(selectors.accountOption).should('be.visible').click()
-    cy.wait(1000)
+    openUserMenu()
     cy.xpath(selectors.logoutButton).should('be.visible').click()
+    cy.xpath(selectors.userId, { timeout: 30000 }).should('be.visible')
   }
 
   const openLimitMenu = () => {
@@ -193,7 +235,7 @@ describe('Factoring Finance - Create Limit', { defaultCommandTimeout: 60000, vie
       const option = visibleByXpath(doc, selectors.anchorSuggestions)
         .find(el => {
           const name = Cypress.$(el).text().trim()
-          return name && !tried.has(name)
+          return name && !tried.has(name) && !isExcludedAnchor(name)
         })
       if (!option) return pickAnchor(tried, rest)
 
@@ -228,6 +270,7 @@ describe('Factoring Finance - Create Limit', { defaultCommandTimeout: 60000, vie
         if (!added.length) throw new Error('No anchor with remaining notional limit was found in the Anchor Name search')
         cy.log(`Only found ${added.length} anchor(s): ${added.join(', ')}`)
         cy.xpath(selectors.closeAnchorPopup).should('be.visible').click()
+        waitForPopupToClose('Closing the empty anchor form')
         return
       }
 
@@ -241,7 +284,7 @@ describe('Factoring Finance - Create Limit', { defaultCommandTimeout: 60000, vie
       typeInto(selectors.financingRate, limitData.buyer.financingRate)
 
       cy.xpath(selectors.addButton).scrollIntoView().should('be.visible').click()
-      cy.wait(1000)
+      waitForPopupToClose(`Adding anchor ${anchor.name}`)
       tried.add(anchor.name)
       addBuyers(tried, [...added, anchor.name])
     })
@@ -284,7 +327,7 @@ describe('Factoring Finance - Create Limit', { defaultCommandTimeout: 60000, vie
     // Buyer Information
     addBuyers()
 
-    cy.wait(2000)
+    waitForPopupToClose('Before Submit')
     cy.xpath(selectors.submitButton).should('be.visible').click()
     clickOk()
     // Saved accounts (cypress/fixtures/created_accounts.json) remember the limit
@@ -311,6 +354,9 @@ describe('Factoring Finance - Create Limit', { defaultCommandTimeout: 60000, vie
 
     cy.xpath(selectors.approveButton).should('be.visible').click()
     clickOk()
+
+    // Once approved, the limit leaves the Pending list
+    cy.contains('[role="row"], tr', limitData.customerName, { timeout: 30000 }).should('not.exist')
     cy.task('markLimit', { accountNo: limitData.loanAccount, module: 'FF', status: 'approved' })
 
     logout()
