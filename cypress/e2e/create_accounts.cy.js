@@ -1,10 +1,36 @@
 /// <reference types="cypress" />
 
 // Dynamic data generation: produces groups of 3 accounts each (CD, OD, ASG)
-// Default to 1 group. Can be overridden with Cypress env `groupsCount`
-// or process env `GROUPS_COUNT`.
+// Each group is one customer and is either a 617 or a 619 group (loanLimitProd).
+// Set the counts with Cypress env `count617` / `count619` (what the prompt
+// passes), or the older `groupsCount` + `groups619` (last N groups are 619).
+//
+// Every group that is created is saved to cypress/fixtures/created_accounts.json
+// (see scripts/accountStore.js) so the limit automation can reuse it.
 
-const groupsCount = (() => {
+function envCount(name){
+  try {
+    if (typeof Cypress !== 'undefined' && Cypress.env && Cypress.env(name) !== undefined) {
+      const v = Number(Cypress.env(name))
+      if (Number.isInteger(v) && v >= 0) return v
+    }
+  } catch (e) {}
+  return null
+}
+
+const count617 = envCount('count617')
+const count619 = envCount('count619')
+const useTypeCounts = count617 !== null || count619 !== null
+
+// Ties saved accounts to this run, so the prompt can offer only the new ones
+const runId = (() => {
+  try {
+    if (typeof Cypress !== 'undefined' && Cypress.env && Cypress.env('runId')) return String(Cypress.env('runId'))
+  } catch (e) {}
+  return new Date().toISOString()
+})()
+
+const groupsCount = useTypeCounts ? (count617 || 0) + (count619 || 0) : (() => {
   try {
     if (typeof Cypress !== 'undefined' && Cypress.env && Cypress.env('groupsCount') !== undefined) {
       const v = Number(Cypress.env('groupsCount'))
@@ -24,7 +50,7 @@ const groupsCount = (() => {
 // will use loanLimit 619; the rest will use 617. Can be set via Cypress env
 // `groups619` or process env `GROUPS_619`.
 
-const groupsWith619 = (() => {
+const groupsWith619 = useTypeCounts ? (count619 || 0) : (() => {
   try {
     if (typeof Cypress !== 'undefined' && Cypress.env && Cypress.env('groups619') !== undefined) {
       const v = Number(Cypress.env('groups619'))
@@ -40,87 +66,20 @@ const groupsWith619 = (() => {
   return 0
 })()
 
-function randItem(arr){
-  return arr[Math.floor(Math.random()*arr.length)]
-}
-
 function randNumeric(len){
   let s = ''
   for(let i=0;i<len;i++) s += Math.floor(Math.random()*10)
   return s
 }
 
-const companyPrefixes = [
-  // Traditional Bangladeshi names
-  'Janata', 'Sonali', 'Rupali', 'Purbani', 'Purabi', 'Uttara', 'Dakshin',
-  'Pubali', 'Modhumoti', 'Meghna', 'Padma', 'Jamuna', 'Karnaphuli', 'Surma',
-  'Titas', 'Teesta', 'Shitalakkhya', 'Buriganga', 'Dhansiri', 'Rupsha',
-
-  // Popular Bangladeshi-style prefixes
-  'Asha', 'Alif', 'Aman', 'Bismillah', 'Noor', 'Rahman', 'Karim', 'Hasan',
-  'Hossain', 'Islam',
-
-  // Modern business names
-  'Prime', 'Apex', 'Elite', 'Royal', 'Green', 'Golden', 'Smart', 'Future',
-  'Vision', 'Pioneer',
-
-  // Nature-based
-  'Sunrise', 'Sunset', 'Morning', 'Moonlight', 'Star', 'Galaxy', 'Sky',
-  'Ocean', 'River', 'Hill',
-
-  // Local style
-  'Nahar', 'Al-Madina', 'Al-Amin', 'Al-Hera', 'New Vision', 'Modern',
-  'Citizen', 'National', 'Eastern', 'Western', 'Northern', 'Southern',
-  'Unity', 'Trust', 'Progress', 'Success', 'Prosper', 'Harmony', 'Reliable',
-
-  // Additional useful prefixes
-  'Bangla', 'Desh', 'Probash', 'Sundar', 'Shakti', 'Pragati',
-  'Somoy', 'Dhaka', 'Chiro', 'Priyo', 'Shonar', 'Teesta', 'Samriddhi',
-  'Bandhu', 'Mukti', 'Sundarban', 'Purbasha', 'Nabab', 'Joy', 'Neel',
-  'Noya', 'Protic', 'Swapno', 'Noor', 'Tara', 'Majhi', 'Nodi', 'Srishti',
-  'Protyasha', 'Chaya', 'Alo', 'Jibon', 'Pran', 'Shapla', 'Bashundhara',
-  'Mithila', 'Akash', 'Milan', 'Jagoron', 'Palli', 'Bangabandhu', 'Mujib',
-  'Shanti', 'Sahaj', 'Kamal', 'Nirman'
-]
-
-const companySuffixes = [
-  'Brothers', 'Traders', 'Enterprise', 'Corporation',
-  'Industries', 'Agency', 'Store', 'Mart', 'Center',
-  'Bazar', 'Depot', 'Warehouse', 'Complex',
-
-  // Textile & garments
-  'Knitwear', 'Textiles', 'Fashions', 'Apparels', 'Garments', 'Composite',
-  'Spinning', 'Weaving', 'Denim', 'Fabrics',
-
-  // Agro & food
-  'Agro', 'Agro Farm', 'Agro Industries', 'Foods', 'Food Products', 'Dairy',
-  'Hatchery', 'Fisheries', 'Poultry', 'Rice Mills',
-
-  // Industrial
-  'Engineering', 'Engineering Works', 'Steel', 'Iron Works', 'Cement',
-  'Ceramics', 'Plastic', 'Packaging', 'Printing', 'Paper Mills',
-
-  // Logistics
-  'Logistics', 'Transport', 'Cargo', 'Freight', 'Shipping', 'Courier',
-  'Delivery', 'Movers', 'Warehouse', 'Supply Chain',
-
-  // Technology
-  'Technologies', 'Technology', 'Software', 'Solutions', 'Digital',
-  'IT', 'Networks', 'Communications', 'Innovations',
-
-  // Construction
-  'Builders', 'Developers', 'Construction', 'Real Estate', 'Properties',
-  'Housing', 'Infrastructure', 'Design', 'Interiors', 'Architecture',
-
-  // General business suffixes
-  // 'Ltd', 'Limited', 'PLC', 'Inc', 'Incorporated', 'LLC', 'LLP', 'LP', 'International', 'Worldwide', 
-  'Corp', 'Company', 'Co', 'Group', 'Holdings', 'Ventures', 'Global','Associates'
-]
+// Standalone company names in CAPITAL LETTERS ending in LTD. / LIMITED / PLC.
+// Rules are shared with scripts/generate_company_names.js.
+const { randomCompanyName, isValidCompanyName } = require('../support/companyNames')
 
 function randCompanyName(){
-  const prefix = randItem(companyPrefixes)
-  const suffix = randItem(companySuffixes)
-  return `${prefix} ${suffix}`
+  const name = randomCompanyName()
+  if (!isValidCompanyName(name)) throw new Error(`Invalid company name generated: ${name}`)
+  return name
 }
 
 
@@ -241,6 +200,18 @@ describe('Mock CBS - Bulk account creation', () => {
       // Create ASG
       const asgAccNo = entry.accountNos[2]
       createAccount(asgAccNo, custId, cdAccNo, 'ASG', createdName)
+
+      // Save only after all three were submitted, for the limit automation
+      cy.task('saveCreatedAccount', {
+        runId,
+        createdAt: new Date().toISOString(),
+        loanLimit,
+        customerId: custId,
+        customerName: createdName,
+        cdAccount: cdAccNo,
+        odAccount: odAccNo,
+        asgAccount: asgAccNo
+      })
     })
   })
 })

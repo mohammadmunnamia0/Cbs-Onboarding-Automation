@@ -5,7 +5,9 @@
   "scripts": {
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
-    "cypress:open:prompt": "node scripts/run-cypress.js"
+    "cypress:open:prompt": "node scripts/run-cypress.js",
+    "limit:run": "cypress run --spec cypress/e2e/create_limit_ff.cy.js",
+    "limit:prompt": "node scripts/run-limit.js"
   },
   "devDependencies": {
     "cypress": "^12.17.4",

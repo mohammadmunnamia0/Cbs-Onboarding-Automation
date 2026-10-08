@@ -1,56 +1,61 @@
-// Generate 5,000 realistic Bangladeshi-style company names.
+// Generate 5,000 standalone Bangladeshi-style company names in CAPITAL LETTERS.
 // Run: node scripts/generate_company_names.js > cypress/fixtures/company_names_5000.txt
+//
+// Naming rules live in cypress/support/companyNames.js and are shared with the
+// Cypress specs. Output is deterministic (seeded) so regeneration is stable.
 
-const prefixes = [
-  'Janata','Sonali','Rupali','Purbani','Purabi','Uttara','Dakshin','Pubali','Modhumoti','Meghna','Padma','Jamuna','Karnaphuli','Surma','Titas','Teesta','Shitalakkhya','Buriganga','Dhansiri','Rupsha',
-  'Asha','Alif','Aman','Bismillah','Noor','Rahman','Karim','Hasan','Hossain','Islam',
-  'Prime','Apex','Elite','Royal','Green','Golden','Smart','Future','Vision','Pioneer',
-  'Sunrise','Sunset','Morning','Moonlight','Star','Galaxy','Sky','Ocean','River','Hill',
-  'Nahar','Al-Madina','Al-Amin','Al-Hera','New Vision','Modern','Citizen','National','Eastern','Western','Northern','Southern','Unity','Trust','Progress','Success','Prosper','Harmony','Reliable',
-  'Bangla','Bengal','Desh','Probash','Sundar','Shakti','Pragati','Somoy','Dhaka','Chiro','Priyo','Shonar','Samriddhi','Bandhu','Mukti','Sundarban','Purbasha','Nabab','Joy','Neel','Noya','Protic','Swapno',
-  'Moni','Jalal','Rong','Noor','Tara','Majhi','Nodi','Srishti','Projot','Protyasha','Chaya','Alo','Jibon','Pran','Sukhi','Shapla','Bashundhara','Mithila','Akash','Milan','Jagoron','Palli','Bangabandhu','Mujib','Shanti','Sahaj','Kamal','Nirman',
-  'Techland','Varies','Galaxy','Metrocom','Infinity','Eagle','Zenith','Nova','Orion','Silverline','Summit','Nexa','Radix','Axis','Polar','Lotus','Vertex','Aspire','Beacon','Vantage','Crest','Emerald','Horizon','Legacy','Momentum','Sapphire'
-]
+const {
+  PREFIXES,
+  BUSINESS_LINES,
+  formatCompanyName,
+  isValidCompanyName,
+  pickSuffix
+} = require('../cypress/support/companyNames')
 
-const categories = [
-  'Trading','Enterprise','Industries','Logistics','Transport','Engineering','Garments','Textiles','Agro','Foods','Construction','Builders','Developers','IT','Software','Technologies','Packaging','Printing','Pharmaceuticals','Healthcare','Plastic','Ceramics','Steel','Furniture','Electronics','Telecom','Courier','Cargo','Shipping','Import & Export','Wholesale','Retail','Fashion','Leather','Fisheries','Poultry','Dairy','Rice Mills','Real Estate','Energy'
-]
+const TOTAL = 5000
 
-const corporateSuffixes = [
-  'Ltd','Limited','Co','Corp','Corporation','PLC','LLP','LLC','Group','Enterprises','Enterprise','Traders','Industries','Association','Foundation','Trust','Services','Holdings','International','Global'
-]
-
-const uniquePrefixes = [...new Set(prefixes)]
-const uniqueCategories = [...new Set(categories)]
-const uniqueCorporateSuffixes = [...new Set(corporateSuffixes)]
-
-const generated = []
-const seen = new Set()
-
-function pushUnique(name) {
-  const normalized = name.trim().replace(/\s+/g, ' ')
-  if (!seen.has(normalized)) {
-    seen.add(normalized)
-    generated.push(normalized)
+// Small seeded PRNG (mulberry32) so the fixture is reproducible.
+function mulberry32(seed) {
+  return function () {
+    seed |= 0
+    seed = (seed + 0x6d2b79f5) | 0
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
   }
 }
 
-for (const prefix of uniquePrefixes) {
-  for (const category of uniqueCategories) {
-    for (const corp of uniqueCorporateSuffixes) {
-      if (generated.length >= 5000) break
-      pushUnique(`${prefix} ${category} ${corp}`)
-      if (generated.length >= 5000) break
-      pushUnique(`${prefix} ${category}`)
-      if (generated.length >= 5000) break
-      pushUnique(`${prefix} & ${category} ${corp}`)
-      if (generated.length >= 5000) break
-    }
-    if (generated.length >= 5000) break
+const rand = mulberry32(20261008)
+
+// One company per prefix + line of business, so no two names differ only by
+// their legal suffix (e.g. "X STEEL LTD." and "X STEEL PLC").
+const pairs = []
+for (const prefix of new Set(PREFIXES)) {
+  for (const businessLine of new Set(BUSINESS_LINES)) {
+    pairs.push([prefix, businessLine])
   }
-  if (generated.length >= 5000) break
 }
 
-for (const name of generated.slice(0, 5000)) {
+if (pairs.length < TOTAL) {
+  console.error(`Only ${pairs.length} unique prefix/business combinations; need ${TOTAL}.`)
+  process.exit(1)
+}
+
+for (let i = pairs.length - 1; i > 0; i--) {
+  const j = Math.floor(rand() * (i + 1))
+  ;[pairs[i], pairs[j]] = [pairs[j], pairs[i]]
+}
+
+const names = pairs
+  .slice(0, TOTAL)
+  .map(([prefix, businessLine]) => formatCompanyName(prefix, businessLine, pickSuffix(rand)))
+
+const invalid = names.filter(name => !isValidCompanyName(name))
+if (invalid.length) {
+  console.error(`Invalid company names generated:\n${invalid.join('\n')}`)
+  process.exit(1)
+}
+
+for (const name of names) {
   console.log(name)
 }
