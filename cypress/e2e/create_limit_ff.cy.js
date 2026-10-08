@@ -39,14 +39,15 @@ const limitData = {
   interestRate: '9',
   invoiceProcessingRate: '0.2',
   safetyDepositRate: '1',
-  customerFinancingRate: '80',
+  // FF uses 80% for both the customer and the anchor financing rate
+  customerFinancingRate: env('financingRate', '80'),
 
   // Buyers - picked from the Anchor Name search (no fixed names), skipping
   // anchors already added or with no remaining notional limit.
   // `buyerCount` is a number or 'all'. `limit` is lowered to the anchor's
   // remaining notional limit when that is smaller.
   buyerCount: env('buyerCount', '2'),
-  buyer: { limit: '1000000', creditPeriod: '5', financingRate: '70' },
+  buyer: { limit: '1000000', creditPeriod: '5', financingRate: env('financingRate', '80') },
 
   // Anchors never to pick, matched by name or ID in the Anchor Name suggestion
   excludedAnchors: [

@@ -36,5 +36,21 @@
         "updatedAt": "2026-10-08T11:41:21.884Z"
       }
     }
+  },
+  {
+    "runId": "2026-10-08T12:05:21.736Z",
+    "createdAt": "2026-10-08T12:05:41.787Z",
+    "loanLimit": "619",
+    "customerId": "67382993",
+    "customerName": "BAHAR PRINTING LTD.",
+    "cdAccount": "16855532234",
+    "odAccount": "63905605488",
+    "asgAccount": "31813767872",
+    "limits": {
+      "FF": {
+        "status": "approved",
+        "updatedAt": "2026-10-08T12:16:53.823Z"
+      }
+    }
   }
 ]

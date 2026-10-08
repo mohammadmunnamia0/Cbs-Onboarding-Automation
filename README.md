@@ -161,6 +161,17 @@ The spec checks these before it starts, so a bad value fails right away:
 - Penalty, Interest, Invoice Processing and Safety Deposit rates ≤ 20
 - Customer and buyer financing rates ≤ 100
 - Customer financing rate ≥ buyer financing rate
+
+### Financing rate
+
+The same rate is used for the customer and the anchor:
+
+| Module | Financing rate |
+| --- | --- |
+| FF | 80% |
+| DF, RF, WOF, HRF, EFA | 100% |
+
+It is set per module in `scripts/limitModules.js` (`financingRate`).
 - Grace Period (≤ 100) and Credit Period are whole numbers
 
 The anchor limit (default `1,000,000`) is lowered to the anchor's Remaining Notional Limit when that is smaller.

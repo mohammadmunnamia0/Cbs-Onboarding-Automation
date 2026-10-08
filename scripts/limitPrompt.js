@@ -49,7 +49,7 @@ async function askModule(ask){
 // `open` launches the Cypress window instead (continues when it is closed).
 function runLimit(mod, acc, { open = false, extraEnv = {} } = {}){
   // JSON keeps account numbers as strings, so leading zeros survive
-  const env = JSON.stringify({ ...mod.env(acc), ...extraEnv })
+  const env = JSON.stringify({ ...mod.env(acc), financingRate: mod.financingRate, ...extraEnv })
   const args = open
     ? ['cypress', 'open', '--e2e', '--env', env]
     : ['cypress', 'run', '--headed', '--spec', mod.spec, '--env', env]
